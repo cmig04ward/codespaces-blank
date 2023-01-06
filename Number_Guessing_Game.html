@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      td {
+        text-align: left;
+      }
+    </style>
+
+    <script>
+        var answer = Math.floor(Math.random()*100);
+        var tries = 0;
+        var upper; //upper guess limit
+        var lower; //lower guess limit
+        var max_tries;
+        var starting_funds = 500;
+        var user_funds = 0;
+        var records = 1;
+        var result;
+        var winning;
+        var current_bet;
+
+
+        function load_values()
+        {
+          upper = 100;
+          lower = 1;
+          document.getElementById('lower').innerHTML = lower;
+          document.getElementById('upper').innerHTML = upper;
+          document.getElementById('tries').innerHTML = 0;
+
+          // storing in record count in local
+          record_count = parseInt(localStorage.getItem("record_count"));
+          if (!record_count)
+          {
+            localStorage.setItem("record_count", records);
+          }
+
+
+
+
+
+            //get user funds from session it exist.
+            user_funds = parseInt(sessionStorage.getItem("user_funds"));
+            if (!user_funds)
+            {
+                user_funds = starting_funds;
+            }
+            document.getElementById('bank').innerHTML = user_funds;
+
+              // call checkenoughfunds function to disabled not valid bets on start
+              checkEnoughFunds();
+
+            //setup additional field
+            document.getElementById("difficulty").disabled = false;
+            setMaxTries(document.getElementById('difficulty').value);
+
+            //document.getElementById('msg').innerHTML = "Guess in " + max_tries + " tries.";
+
+            // this detect the change in the dropdown used to update the screen immediately;
+            document.getElementById('difficulty').addEventListener('change', function handleChange(event) {
+                setMaxTries(event.target.value);
+                // called check enough funds on each time a user change their bet to disable bets with more value, and set current bet to value of option selected
+                checkEnoughFunds();
+                current_bet = event.target.value;
+                updateScreen("Guess in " + max_tries + " tries.");
+            });
+            updateScreen("Guess in " + max_tries + " tries.");
+            //disable button until a bet is placed
+            document.getElementById('goButton').disabled = true;
+
+
+        } // end load values
+
+
+            //I broke up the max tries from the level so I can add more levels possibly. Someday
+        function setMaxTries (diff_lvl){
+            diff_lvl = parseInt(diff_lvl);
+            switch (diff_lvl){
+
+              //I changed cases numbers to match option values for bet
+
+                case 100:
+                    max_tries = 10;
+                    document.getElementById('wolf').src = "1.png";
+                    document.getElementById('cost_to_play').innerHTML = "100";
+                    document.getElementById('win_payout').innerHTML = "101"
+                    break;
+                case 125:
+                    max_tries = 8;
+                    document.getElementById('wolf').src = "2.png";
+                    document.getElementById('cost_to_play').innerHTML = "125";
+                    document.getElementById('win_payout').innerHTML = "150"
+                    break;
+                case 200:
+                    max_tries = 6;
+                    document.getElementById('wolf').src = "3.png";
+                    document.getElementById('cost_to_play').innerHTML = "200";
+                    document.getElementById('win_payout').innerHTML = "350"
+                    break;
+                case 500:
+                    max_tries = 4;
+                    document.getElementById('wolf').src = "4.png";
+                    document.getElementById('cost_to_play').innerHTML = "500";
+                    document.getElementById('win_payout').innerHTML = "1000"
+                    break;
+                default:
+                    max_tries = 0;
+                    document.getElementById('wolf').src = "0.png";
+                    document.getElementById('cost_to_play').innerHTML = "0";
+                    document.getElementById('win_payout').innerHTML = "0"
+            }
+        } //end set max tries
+
+        function submit_guess() {
+          // I added parseInt to guess because it was taking me forever to think how to string it.
+            var guess = parseInt(document.getElementById('guess').value);
+            var message = "";
+            tries++;
+
+            if (guess == answer) {
+            result = 'Won';
+            winning = parseInt(document.getElementById('win_payout').innerHTML) * parseInt(document.getElementById('bonus').innerHTML);
+              alert("You win! It took you " + tries + " tries.");
+
+
+                //add the funds to the bank
+                // I multiply payout with bonus if you win first try, bonus first atempt pays double and after just x 1, basisically no bonus after 1 attempt.
+                user_funds += parseInt(document.getElementById('win_payout').innerHTML) * parseInt(document.getElementById('bonus').innerHTML);
+                sessionStorage.setItem("user_funds", user_funds);
+              // I added gameover function before reloading page to save that record part in my localstorage
+              gameOver();
+              window.location.reload();
+          } else if (guess <= lower || guess >= upper) {
+              if (tries == 1 && (guess == upper || guess == lower)){
+                  message = "Try again";
+              }
+              else {
+                  message = "Out of range."
+                  tries--;
+              }
+            } else if (tries >= max_tries) {
+            // I set result to lose and winning to minus current bet amount
+            result = 'lost';
+            winning = -(current_bet);
+              // made changes here the value of win_payout was getting subtracted from user_funds on losing condition so I replaced it with cost_to_play...
+              user_funds -= parseInt(document.getElementById('cost_to_play').innerHTML);
+              sessionStorage.setItem("user_funds", user_funds);
+              alert("You lose. Too many tries. Answer was " + answer);
+              // call the gameover function again before reload on losing game to store that record in my localstorge
+              gameOver();
+              window.location.reload();
+            } else if (guess > answer) {
+                message = "Too High";
+                upper = guess;
+            } else if (guess < answer) {
+                message = "Too Low";
+                lower = guess;
+            } else {
+                alert("Error in Program. Reloading...");
+                location.reload();
+            }
+            updateScreen(message);
+
+        } //end submit_guess
+
+        function updateScreen(message) {
+            if (tries >=1 )
+            {
+                document.getElementById("difficulty").disabled = true;
+                document.getElementById('bonus').innerHTML = 1;
+            }
+            document.getElementById('msg').innerHTML = message;
+            document.getElementById('tries').innerHTML = tries;
+            document.getElementById('upper').innerHTML = upper;
+            document.getElementById('lower').innerHTML = lower;
+
+            //update bank
+            document.getElementById('bank').innerHTML = user_funds;
+
+            //validate playcostOption - Such as do I have enough money to keep playing?
+            var playcostOption = parseInt(document.getElementById('cost_to_play').innerHTML);
+            if (user_funds < 100)
+            {
+                alert("You are out of money to play. Let me help you out.");
+                document.getElementById('goButton').disabled = true;
+                sessionStorage.setItem("user_funds") = starting_funds;
+                location.reload();//for now just reload the game and give them some starting cash :)
+
+            }
+            else if (user_funds < playcostOption)
+            {
+                alert("Not Enough Money, choose another bet");
+                document.getElementById('goButton').disabled = true;
+            } else {document.getElementById('goButton').disabled = false;}
+        } // end updateScreen
+
+
+        function checkEnoughFunds() {
+            var options = document.getElementsByClassName('bet');
+          // loop
+            for (let i = 0; i < options.length; i++) {
+                if (options[i].value > user_funds) {
+                    options[i].disabled = true;
+                } else {
+                  options[i].disabled = false;
+                }
+            }
+        }
+
+
+        function reset_funds(){
+          sessionStorage.setItem("user_funds", starting_funds);
+          user_funds = starting_funds;
+          document.getElementById('bank').innerHTML = starting_funds;
+          checkEnoughFunds();
+        }
+
+        // function called when game is over. Meaning that if the player loses or wins.
+      // this funtion actually stores both winning and losing of player in my local storage
+      function gameOver() {
+        var Number = localStorage.getItem('record_count');
+        // object to store everything and then store it into my localstorage
+        var currentRecord = {
+          'bet_amount' : current_bet,
+          'result': result,
+          'winning': winning,
+          'funds': sessionStorage.getItem('user_funds'),
+          'time': new Date()
+        }
+        //I had major issues with this part
+        localStorage.setItem('record'+Number, JSON.stringify(currentRecord));
+        // was able to put in chronicological order in localstorage
+        localStorage.setItem('record_count', parseInt(Number)+1);
+      }
+    </script>
+  </head>
+
+  <body onload="load_values()">
+    <center><h1>Number Guessing Game</h1></center>
+    <center><h4>Double Your Winnings by Guessing on First Try</h4></center>
+
+    <table border="1" align="center">
+      <tr>
+        <td colspan="2" align="center">
+          Number is between <span id="lower"></span> and
+          <span id="upper"></span>
+        </td>
+        <td rowspan="4" align="left" style="vertical-align: top">
+          <center><u>Difficulty</u></center>
+          <select name="difficulty" id="difficulty">
+            <!-- I changed the values of options to cost to play to avoid complexity in my code, and added bets as class to get options -->
+            <option disabled selected value>- select a bet -</option>
+            <option value="100" class="bet">Hey take it easy.</option>
+            <option value="125" class="bet">Play fair!</option>
+            <option value="200" class="bet">Hardball</option>
+            <option value="500" class="bet">The Fire Pit</option>
+          </select>
+          <center>
+            <--
+            <img scr="" id="wolf" alt="difficulty" />
+          </center>
+        </td>
+        <td rowspan="4" align="left" style="vertical-align: top">
+          <center><u>Bank</u></center>
+          Funds Remaining<br />
+          <center>$<span id="bank"></span></center>
+        </td>
+      </tr>
+      <tr>
+        <td>Enter a Guess:</td>
+        <td>
+          <input
+            id="guess"
+            class="input_guess"
+            type="number"
+            size="3"
+            min="1"
+            max="100"
+          />
+        </td>
+      </tr>
+      <tr>
+        <td>Guesses: <span id="tries"></span></td>
+        <td>
+          <button id="goButton" onclick="submit_guess()">Submit</button>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="2"><div id="msg"></div></td>
+      </tr>
+      <tr>
+        <td colspan="2">Cost to play: $<span id="cost_to_play"></span></td>
+        <td colspan="2">
+          Win Payout: $<span id="win_payout"></span> x <span id="bonus">2</span>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="4">
+          <!-- my reset button -->
+          <center>
+            <button id="resetButton" onclick="reset_funds()">
+              Reset Funds
+            </button>
+          </center>
+        </td>
+      </tr>
+    </table>
+    <center>
+      <a href="records.html"><button>See records</button></a>
+    </center>
+  </body>
+</html>

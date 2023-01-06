@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Hello There</title>
+  </head>
+
+  <body>
+    <script type="text/javascript">
+      // Use of prompt instead of alert. Reason being the input of information i'm requesting for user to submit 
+      var name = prompt("What is your first name?");
+      var age = prompt("How old are you?");
+      var text = "" + name + " is " + age + " years old.";
+      var text1 = "Sorry Tweety but you do not have access.";
+      var i = 1;
+      if (name != "Tweety")
+        while (i <= age) {
+          document.write(text);
+          i++;
+        }
+      else if (name == "Tweety") {
+        document.write(text1);
+      }
+    </script>
+  </body>
+</html>

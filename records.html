@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <center><h1>All Records</h1></center>
+    <table border="1" align="center">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Bet Amount</th>
+          <th>Result</th>
+          <th>Winning</th>
+          <th>Funds Remaining</th>
+          <th>Date and Time</th>
+        </tr>
+      </thead>
+      <tbody id="records"></tbody>
+    </table>
+    <center>
+      <button onclick="clearRecords()">Clear All Records</button>
+    </center>
+    <center>
+      <a href="Number_Guessing_Game.html"><button>Play again</button></a>
+    </center>
+  </body>
+  <script>
+    // loop thats will run the number of records for the time
+    for (var i = 1; i < localStorage.record_count; i++) {
+      // a string for i variable to get the item from localstorage
+      // basically i=1 record+1 and it will be record1 and I will get it from localstorage
+      // record+2 will be record2 and Ill get it from local storage and so on
+      var record = "record";
+      record += i;
+
+      // in this variable I got the item from localstorage and converted it back into object.
+      // now my object is stored in current_record
+      // so I can use the object with current_record variable
+      var current_record = JSON.parse(localStorage.getItem(record));
+
+      // got the tbody by id and added a tr to its html each time for loop run
+      document.getElementById("records").innerHTML +=
+        "<tr>" +
+        // showed number in first td
+        "<td>" +
+        i +
+        "</td>" +
+        // bet ammount from object stored in current_record
+        "<td>" +
+        current_record.bet_amount +
+        "</td>" +
+        // result stored in current_record is shown in next td and so on for all of them
+        "<td>" +
+        current_record.result +
+        "</td>" +
+        "<td>" +
+        current_record.winning +
+        "</td>" +
+        "<td>" +
+        current_record.funds +
+        "</td>" +
+        // date stored in this object , converted it back in date by new date function snd showed it
+        "<td>" +
+        new Date(current_record.time) +
+        "</td>" +
+        "</tr>";
+    }
+
+    function clearRecords() {
+      localStorage.clear();
+      window.location.reload();
+    }
+  </script>
+</html>
